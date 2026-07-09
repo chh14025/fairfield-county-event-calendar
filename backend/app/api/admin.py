@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from ..auth import login, require_admin
 from ..db import get_db
 from ..models import Event, IngestRun
-from ..schemas import EventOut, LoginIn, ModerationOut
+from ..schemas import EventOut, LoginIn, ModerationOut, PendingEventOut, RejectIn
 
 router = APIRouter(prefix="/admin")
 
@@ -15,7 +15,7 @@ def admin_login(body: LoginIn, request: Request, response: Response):
     return {"ok": True}
 
 
-@router.get("/pending", response_model=list[EventOut], dependencies=[Depends(require_admin)])
+@router.get("/pending", response_model=list[PendingEventOut], dependencies=[Depends(require_admin)])
 def pending(db: Session = Depends(get_db)):
     return (
         db.query(Event)
@@ -49,8 +49,11 @@ def approve(event_id: str, db: Session = Depends(get_db)):
     response_model=ModerationOut,
     dependencies=[Depends(require_admin)],
 )
-def reject(event_id: str, db: Session = Depends(get_db)):
+def reject(event_id: str, body: RejectIn | None = None, db: Session = Depends(get_db)):
     e = _moderate(db, event_id, "rejected")
+    if body and body.reason:
+        e.rejection_reason = body.reason
+        db.commit()
     return ModerationOut(id=e.id, status=e.status)
 
 

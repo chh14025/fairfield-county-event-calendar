@@ -3,7 +3,7 @@ import { api, EventItem, fmtDate } from "../api";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
-  const [pending, setPending] = useState<EventItem[]>([]);
+  const [pending, setPending] = useState<(EventItem & { submitter_email?: string | null })[]>([]);
   const [error, setError] = useState("");
   const [pubQuery, setPubQuery] = useState("");
   const [tips, setTips] = useState<{ id: string; message: string; email: string | null; created_at: string }[]>([]);
@@ -57,6 +57,24 @@ export default function AdminPage() {
     load();
   }
 
+  async function rejectWithReason(e: EventItem & { submitter_email?: string | null }) {
+    const reason = window.prompt(
+      "Reason for rejection (optional — used in the email draft to the submitter):"
+    );
+    if (reason === null) return; // cancelled
+    await api.moderate(e.id, "reject", reason || undefined);
+    load();
+    if (reason && e.submitter_email) {
+      const subject = encodeURIComponent(`Your event submission: ${e.title}`);
+      const body = encodeURIComponent(
+        `Hi,\n\nThanks for submitting "${e.title}" to Fairfield County Events. ` +
+          `Unfortunately we couldn't publish it this time.\n\nReason: ${reason}\n\n` +
+          `Feel free to resubmit with updates!\n`
+      );
+      window.open(`mailto:${e.submitter_email}?subject=${subject}&body=${body}`);
+    }
+  }
+
   async function removePublished(id: string, title: string) {
     if (!window.confirm(`Remove "${title}" from the site? Ingestion will not re-add it.`)) return;
     await api.removeEvent(id);
@@ -89,7 +107,7 @@ export default function AdminPage() {
           {e.description && <p>{e.description}</p>}
           <div style={{ display: "flex", gap: ".5rem" }}>
             <button onClick={() => act(e.id, "approve")}>Approve</button>
-            <button className="secondary" onClick={() => act(e.id, "reject")}>Reject</button>
+            <button className="secondary" onClick={() => rejectWithReason(e)}>Reject…</button>
           </div>
         </div>
       ))}

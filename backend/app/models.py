@@ -40,6 +40,7 @@ class Event(Base):
     image_url: Mapped[str | None] = mapped_column(Text)
     price_text: Mapped[str | None] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(16), default="approved", index=True)
+    rejection_reason: Mapped[str | None] = mapped_column(Text)
     submitter_email: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)

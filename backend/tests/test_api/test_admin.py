@@ -72,3 +72,22 @@ def test_removed_event_not_resurrected_by_ingest(client, db):
     assert event2.id == event.id
     assert event2.status == "rejected"  # stays hidden
     assert client.get("/api/v1/events").json()["total"] == 0
+
+
+def test_reject_with_reason_stored_and_email_visible(client, db):
+    from app.models import Event
+
+    event_id = client.post("/api/v1/submissions", json=SUBMISSION).json()["id"]
+    headers = {"Authorization": "Bearer testpw"}
+
+    pending = client.get("/api/v1/admin/pending", headers=headers).json()
+    assert pending[0]["submitter_email"] == "organizer@example.com"
+
+    resp = client.post(
+        f"/api/v1/admin/events/{event_id}/reject",
+        headers=headers,
+        json={"reason": "Duplicate of an existing listing"},
+    )
+    assert resp.json()["status"] == "rejected"
+    db.expire_all()
+    assert db.get(Event, event_id).rejection_reason == "Duplicate of an existing listing"

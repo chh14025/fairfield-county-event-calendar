@@ -70,6 +70,14 @@ class TownCount(BaseModel):
     upcoming_events: int
 
 
+class PendingEventOut(EventOut):
+    submitter_email: str | None
+
+
+class RejectIn(BaseModel):
+    reason: str | None = Field(default=None, max_length=1000)
+
+
 class ModerationOut(BaseModel):
     id: str
     status: str

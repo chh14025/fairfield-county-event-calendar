@@ -55,8 +55,12 @@ export const api = {
       body: JSON.stringify({ password }),
     }),
   pending: () => get<EventItem[]>("/admin/pending"),
-  moderate: (id: string, action: "approve" | "reject") =>
-    fetch(`${BASE}/admin/events/${id}/${action}`, { method: "POST" }),
+  moderate: (id: string, action: "approve" | "reject", reason?: string) =>
+    fetch(`${BASE}/admin/events/${id}/${action}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(reason ? { reason } : {}),
+    }),
   removeEvent: (id: string) => fetch(`${BASE}/admin/events/${id}`, { method: "DELETE" }),
   submitTip: (body: { message: string; email?: string | null }) =>
     fetch(`${BASE}/tips`, {
