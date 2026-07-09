@@ -1,0 +1,153 @@
+# Source registry (SPEC 3). Run `python -m ingest.verify_sources` to probe all entries.
+# verification: confirmed | candidate | needs-discovery
+sources:
+  # --- CONFIRMED (verified 2026-07-08, valid iCal responses) ---
+  - id: lib-westport
+    type: ical
+    town: Westport
+    # The Events Calendar (WordPress) feed — full community program calendar.
+    url: "https://westportlibrary.org/events/?ical=1"
+    verification: confirmed
+    enabled: true
+  - id: libcal-bridgeport-main
+    type: ical
+    town: Bridgeport
+    # LibCal, Burroughs-Saden (main). Branch cids: Beardsley 19092, Black Rock 19093,
+    # Newfield 19095, North 19096 — add as separate entries if wanted.
+    url: "https://bportlibrary.libcal.com/ical_subscribe.php?src=p&cid=19094"
+    verification: confirmed
+    enabled: true
+  - id: mill-river-park
+    type: ical
+    town: Stamford
+    # The Events Calendar feed, verified 2026-07-08. Dense community calendar:
+    # movies in the park, fitness classes, festivals, kids programs, carousel.
+    url: "https://millriverpark.org/events/?ical=1"
+    verification: confirmed
+    enabled: true
+  - id: stamford-downtown
+    type: ical
+    town: Stamford
+    # Stamford Downtown SSD (The Events Calendar), verified 2026-07-08. Farmers market,
+    # Street Beats concerts, trivia, block parties, comedy club, parade.
+    url: "https://stamford-downtown.com/events/?ical=1"
+    verification: confirmed
+    enabled: true
+  - id: greenwich-lib-coscob
+    type: ical
+    town: Greenwich
+    # LibCal, Cos Cob branch. Verified 2026-07-08 (~80 events).
+    url: "https://greenwichlibrary.libcal.com/ical_subscribe.php?src=p&cid=14605"
+    verification: confirmed
+    enabled: true
+  - id: greenwich-lib-byram
+    type: ical
+    town: Greenwich
+    # LibCal, Byram Shubert branch. Verified 2026-07-08 (~89 events).
+    url: "https://greenwichlibrary.libcal.com/ical_subscribe.php?src=p&cid=14606"
+    verification: confirmed
+    enabled: true
+  - id: town-greenwich-special-events
+    type: ical
+    town: Greenwich
+    # CivicPlus "Special Events Calendar" (catID=32). Verified 2026-07-08:
+    # Parks & Rec Summer Concert Series etc. Feed includes stale 2020-23 items
+    # (harmless — past events expire). Wallace Center (senior programs) is catID=24.
+    url: "https://www.greenwichct.gov/common/modules/iCalendar/iCalendar.aspx?catID=32&feed=calendar"
+    verification: confirmed
+    enabled: true
+  - id: greenwich-wallace-center
+    type: ical
+    town: Greenwich
+    # CivicPlus, THE WALLACE CENTER calendar (86 events — senior/community programs).
+    url: "https://www.greenwichct.gov/common/modules/iCalendar/iCalendar.aspx?catID=24&feed=calendar"
+    verification: candidate
+    enabled: true
+  - id: heystamford
+    type: rss  # NOT ical — Metro Publisher platform, RSS only (M3: needs rss connector;
+               # note RSS pubDate is publish date, not event date -> parse from content)
+    town: Stamford
+    url: "https://www.heystamford.com/event-calendar/index.rss"
+    verification: candidate
+    enabled: false
+
+  # --- NEEDS LOCAL VERIFICATION / DISCOVERY ---
+  - id: lib-ferguson-stamford
+    type: ical
+    town: Stamford
+    # Ferguson Library (Stamford) runs LibraryCalendar (same platform as Fairfield's
+    # library). No feed URL found by probing; check an event page in your browser for
+    # an "Export .ics"/subscribe link, or ask the library for their calendar feed.
+    url: "https://fergusonlibrary.org/VERIFY"
+    verification: needs-discovery
+    enabled: false
+  - id: town-stamford
+    type: ical
+    town: Stamford
+    # stamfordct.gov = Granicus Vision CMS (same as Westport town), meetings-heavy,
+    # only a few community items/month -> low priority, HTML scraper (M3).
+    url: "https://www.stamfordct.gov/residents/city-calendar VERIFY-scraper"
+    verification: needs-discovery
+    enabled: false
+  - id: greenwich-lib-main
+    type: ical
+    town: Greenwich
+    # Main branch cid not guessable (14605/14606 = Cos Cob/Byram). In a browser open
+    # https://greenwichlibrary.libcal.com/calendars, filter to Greenwich Library, click iCal.
+    url: "https://greenwichlibrary.libcal.com/ical_subscribe.php?src=p&cid=VERIFY"
+    verification: needs-discovery
+    enabled: false
+  - id: lib-darien
+    type: scraper  # LibraryCalendar platform (same as Ferguson + Fairfield libraries).
+                   # M3: one scraper connector unlocks all three. Server-rendered HTML.
+    town: Darien
+    url: "https://www.darienlibrary.org/events"
+    verification: candidate
+    enabled: false
+  - id: lib-newcanaan
+    type: ical
+    town: New Canaan
+    # newcanaanlibrary.org/events is JS-rendered (platform TBD, possibly Communico).
+    # Check in a browser for a subscribe/export link.
+    url: "https://VERIFY"
+    verification: needs-discovery
+    enabled: false
+  - id: lib-norwalk
+    type: ical
+    town: Norwalk
+    # norwalkpl.org — platform unconfirmed; check events page in a browser.
+    url: "https://VERIFY"
+    verification: needs-discovery
+    enabled: false
+  - id: town-norwalk
+    type: ical
+    town: Norwalk
+    # CivicEngage; site blocks cloud IPs — verify from home. Try in browser:
+    # https://norwalkct.gov/RSSFeed.aspx?ModID=58&CID=All-calendar.xml (RSS) or open
+    # a calendar page and use the "iCalendar" subscribe link (iCalendar.aspx?catID=...).
+    url: "https://norwalkct.gov/common/modules/iCalendar/iCalendar.aspx?catID=VERIFY&feed=calendar"
+    verification: candidate
+    enabled: false
+  - id: lib-fairfield
+    type: ical
+    town: Fairfield
+    # LibraryMarket at fplct.librarymarket.com — /events/feed and export.ics guesses
+    # returned empty. Open the calendar in a browser and look for a subscribe/export link.
+    url: "https://fplct.librarymarket.com/VERIFY"
+    verification: needs-discovery
+    enabled: false
+  - id: town-westport
+    type: ical
+    town: Westport
+    # Granicus Vision CMS, meetings-focused, per-event iCal only -> HTML scraper (M3),
+    # or use discoverwestportct.com for community events.
+    url: "https://VERIFY"
+    verification: needs-discovery
+    enabled: false
+  - id: town-fairfield
+    type: ical
+    town: Fairfield
+    # Revize CMS, JS-rendered. Community events run by Parks & Rec: ffldcommunity.com (M3 scraper).
+    url: "https://VERIFY"
+    verification: needs-discovery
+    enabled: false

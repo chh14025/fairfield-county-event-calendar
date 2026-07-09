@@ -1,0 +1,30 @@
+[project]
+name = "fairfield-events-backend"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "sqlalchemy>=2.0",
+    "pydantic[email]>=2.6",
+    "pydantic-settings>=2.2",
+    "httpx>=0.27",
+    "icalendar>=5.0",
+    "rapidfuzz>=3.6",
+    "pyyaml>=6.0",
+    "psycopg2-binary>=2.9",
+    "python-dateutil>=2.9",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.4"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app", "app.api", "ingest", "ingest.connectors"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

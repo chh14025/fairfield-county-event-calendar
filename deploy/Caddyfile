@@ -1,0 +1,23 @@
+{$DOMAIN} {
+	encode gzip
+
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+	handle /healthz {
+		reverse_proxy api:8000
+	}
+	handle /docs* {
+		reverse_proxy api:8000
+	}
+	handle /openapi.json {
+		reverse_proxy api:8000
+	}
+
+	# SPA: serve static build, fall back to index.html for client routes
+	handle {
+		root * /srv/www
+		try_files {path} /index.html
+		file_server
+	}
+}

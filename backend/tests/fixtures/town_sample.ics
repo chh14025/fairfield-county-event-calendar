@@ -1,0 +1,18 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Town of Westport//Calendar//EN
+BEGIN:VEVENT
+UID:evt-1001@westportct.gov
+SUMMARY:Westport Farmers Market
+DESCRIPTION:Weekly farmers market with 40+ local vendors.
+DTSTART:20260716T140000Z
+DTEND:20260716T180000Z
+LOCATION:Imperial Avenue Parking Lot
+URL:https://westportct.gov/events/1001
+END:VEVENT
+BEGIN:VEVENT
+UID:evt-1002@westportct.gov
+SUMMARY:Independence Day Fireworks
+DTSTART;VALUE=DATE:20260704
+END:VEVENT
+END:VCALENDAR
