@@ -57,6 +57,7 @@ export const api = {
   pending: () => get<EventItem[]>("/admin/pending"),
   moderate: (id: string, action: "approve" | "reject") =>
     fetch(`${BASE}/admin/events/${id}/${action}`, { method: "POST" }),
+  removeEvent: (id: string) => fetch(`${BASE}/admin/events/${id}`, { method: "DELETE" }),
 };
 
 export function fmtDate(iso: string, allDay: boolean): string {

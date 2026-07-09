@@ -54,6 +54,26 @@ def reject(event_id: str, db: Session = Depends(get_db)):
     return ModerationOut(id=e.id, status=e.status)
 
 
+@router.delete(
+    "/events/{event_id}",
+    response_model=ModerationOut,
+    dependencies=[Depends(require_admin)],
+)
+def remove(event_id: str, db: Session = Depends(get_db)):
+    """Remove any event from the site (pending, approved, or expired).
+
+    Implemented as status=rejected rather than a hard delete: the EventSource
+    rows survive, so the next ingest run updates the event in place instead of
+    resurrecting it as a fresh approved copy.
+    """
+    event = db.get(Event, event_id)
+    if event is None or event.status == "rejected":
+        raise HTTPException(status_code=404, detail="No such event")
+    event.status = "rejected"
+    db.commit()
+    return ModerationOut(id=event.id, status=event.status)
+
+
 @router.get("/ingest-runs", dependencies=[Depends(require_admin)])
 def ingest_runs(db: Session = Depends(get_db)):
     rows = db.query(IngestRun).order_by(IngestRun.started_at.desc()).limit(50).all()
