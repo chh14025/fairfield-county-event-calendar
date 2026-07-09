@@ -46,17 +46,33 @@ def test_skips_season_long_allday_placeholders():
     assert ids == {"occ-1", "fest-1"}  # season placeholder dropped, short span kept
 
 
-def test_relative_url_falls_back_to_feed_url():
-    """CivicPlus feeds put relative paths in URL; fall back to the feed URL."""
+def test_civicplus_event_url_extracted_from_description():
+    """CivicPlus: URL field is a relative feed path (junk); the real event page
+    link is appended to DESCRIPTION. Promote it and strip it from the text."""
     ics = (
         b"BEGIN:VCALENDAR\nVERSION:2.0\n"
         b"BEGIN:VEVENT\nUID:cp-1\nSUMMARY:Summer Concert\n"
         b"DTSTART:20260722T230000Z\n"
-        b"URL:/common/modules/iCalendar/iCalendar.aspx?feed=calendar&catID=32\n"
+        b"DESCRIPTION:Jazz on the green. https://norwalkct.gov/calendar.aspx?EID=16981\n"
+        b"URL:/common/modules/iCalendar/iCalendar.aspx?feed=calendar&catID=47\n"
         b"END:VEVENT\nEND:VCALENDAR\n"
     )
-    (event,) = parse_ical(ics, town="Greenwich", base_url="https://example.gov/feed")
-    assert event.url == "https://example.gov/feed"
+    (event,) = parse_ical(ics, town="Norwalk", base_url="https://example.gov/feed.ics")
+    assert event.url == "https://norwalkct.gov/calendar.aspx?EID=16981"
+    assert event.description == "Jazz on the green."
+
+
+def test_url_only_description_becomes_link_not_text():
+    ics = (
+        b"BEGIN:VCALENDAR\nVERSION:2.0\n"
+        b"BEGIN:VEVENT\nUID:cp-2\nSUMMARY:Task Force Meeting\n"
+        b"DTSTART:20260716T230000Z\n"
+        b"DESCRIPTION: https://norwalkct.gov/calendar.aspx?EID=16999\n"
+        b"END:VEVENT\nEND:VCALENDAR\n"
+    )
+    (event,) = parse_ical(ics, town="Norwalk")
+    assert event.url == "https://norwalkct.gov/calendar.aspx?EID=16999"
+    assert event.description is None  # never render a bare URL as the description
 
 
 def test_strips_html_from_text_fields():

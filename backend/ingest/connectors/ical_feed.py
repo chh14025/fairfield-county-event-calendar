@@ -11,6 +11,7 @@ from app.utils import to_utc_naive
 from .base import USER_AGENT, RawEvent
 
 _TAG_RE = re.compile(r"<[^>]+>")
+_TRAILING_URL_RE = re.compile(r"(https?://\S+)\s*$")
 
 
 def clean_text(value) -> str | None:
@@ -47,13 +48,20 @@ def parse_ical(data: bytes, town: str, base_url: str | None = None) -> list[RawE
         if all_day and ends_at is not None and (ends_at - starts_at) > MAX_ALL_DAY_SPAN:
             continue  # season-long placeholder, not a real single event
         url_str = str(url).strip() if url else None
-        if not url_str or not url_str.startswith("http"):
-            url_str = base_url  # CivicPlus feeds emit relative junk in URL
+        if url_str and not url_str.startswith("http"):
+            url_str = None  # CivicPlus puts a relative feed path in URL — useless
+        description = clean_text(comp.get("DESCRIPTION"))
+        if not url_str and description:
+            # CivicPlus appends the real event-page link at the end of DESCRIPTION.
+            m = _TRAILING_URL_RE.search(description)
+            if m:
+                url_str = m.group(1).rstrip(".,);")
+                description = description[: m.start()].strip(" -") or None
         events.append(
             RawEvent(
                 external_id=uid,
                 title=summary,
-                description=clean_text(comp.get("DESCRIPTION")),
+                description=description,
                 starts_at=starts_at,
                 ends_at=ends_at,
                 all_day=all_day,

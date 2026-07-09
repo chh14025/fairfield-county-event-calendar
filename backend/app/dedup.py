@@ -73,9 +73,23 @@ def upsert_event(db: Session, raw: RawEvent, source_id: str) -> tuple[Event, str
         .one_or_none()
     )
     if existing_src is not None:
+        # Same-source refresh: the source is authoritative for its own event, so
+        # replace fields outright (lets upstream corrections propagate) instead of
+        # the longer-wins merge used for cross-source matches.
         event = existing_src.event
-        _merge_fields(event, raw, source_id)
         event.title = raw.title
+        event.starts_at = raw.starts_at
+        event.ends_at = raw.ends_at
+        event.all_day = raw.all_day
+        if raw.description:
+            event.description = raw.description
+        if raw.venue_name:
+            event.venue_name = raw.venue_name
+        if raw.url:
+            event.url = raw.url
+        event.address = event.address or raw.address
+        event.image_url = raw.image_url or event.image_url
+        event.price_text = raw.price_text or event.price_text
         existing_src.last_seen_at = utcnow()
         existing_src.raw = raw.model_dump(mode="json")
         db.flush()
