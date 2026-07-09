@@ -17,6 +17,7 @@ sources:
     url: "https://bportlibrary.libcal.com/ical_subscribe.php?src=p&cid=19094"
     verification: confirmed
     enabled: true
+    exclude_titles: ["library closed", "branch closed", "closed - holiday"]
   - id: mill-river-park
     type: ical
     town: Stamford
@@ -40,6 +41,7 @@ sources:
     url: "https://greenwichlibrary.libcal.com/ical_subscribe.php?src=p&cid=14605"
     verification: confirmed
     enabled: true
+    exclude_titles: ["library closed", "branch closed"]
   - id: greenwich-lib-byram
     type: ical
     town: Greenwich
@@ -47,22 +49,26 @@ sources:
     url: "https://greenwichlibrary.libcal.com/ical_subscribe.php?src=p&cid=14606"
     verification: confirmed
     enabled: true
+    exclude_titles: ["library closed", "branch closed"]
   - id: town-greenwich-special-events
     type: ical
     town: Greenwich
     # CivicPlus "Special Events Calendar" (catID=32). Verified 2026-07-08:
     # Parks & Rec Summer Concert Series etc. Feed includes stale 2020-23 items
     # (harmless — past events expire). Wallace Center (senior programs) is catID=24.
+    # NOTE: CivicPlus 403s AWS/cloud IPs — works from residential connections only.
+    # Disabled in prod until a home-runner/push mechanism exists (see DEPLOY.md notes).
     url: "https://www.greenwichct.gov/common/modules/iCalendar/iCalendar.aspx?catID=32&feed=calendar"
     verification: confirmed
-    enabled: true
+    enabled: false
   - id: greenwich-wallace-center
     type: ical
     town: Greenwich
     # CivicPlus, THE WALLACE CENTER calendar (86 events — senior/community programs).
+    # NOTE: CivicPlus 403s AWS/cloud IPs — disabled in prod (same as special-events).
     url: "https://www.greenwichct.gov/common/modules/iCalendar/iCalendar.aspx?catID=24&feed=calendar"
     verification: candidate
-    enabled: true
+    enabled: false
   - id: heystamford
     type: rss  # NOT ical — Metro Publisher platform, RSS only (M3: needs rss connector;
                # note RSS pubDate is publish date, not event date -> parse from content)

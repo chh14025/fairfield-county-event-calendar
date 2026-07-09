@@ -31,6 +31,19 @@ def load_sources(path: Path | None = None) -> list[dict]:
     return [s for s in data.get("sources", []) if s.get("enabled")]
 
 
+def filter_events(events: list, exclude_titles: list[str]) -> list:
+    """Drop events whose title contains any excluded phrase (case-insensitive).
+    Used for calendar noise like 'Library Closed' notices."""
+    if not exclude_titles:
+        return events
+    patterns = [p.lower() for p in exclude_titles]
+    kept = [e for e in events if not any(p in e.title.lower() for p in patterns)]
+    dropped = len(events) - len(kept)
+    if dropped:
+        log.info("filtered %d excluded-title events", dropped)
+    return kept
+
+
 def run(sources: list[dict] | None = None) -> None:
     init_db()
     sources = sources if sources is not None else load_sources()
@@ -44,7 +57,7 @@ def run(sources: list[dict] | None = None) -> None:
         db.commit()
         try:
             connector = CONNECTOR_TYPES[cfg["type"]](cfg)
-            raw_events = connector.fetch()
+            raw_events = filter_events(connector.fetch(), cfg.get("exclude_titles", []))
             for raw in raw_events:
                 upsert_event(db, raw, source_id=cfg["id"])
             db.commit()
