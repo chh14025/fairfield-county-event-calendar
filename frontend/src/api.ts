@@ -58,6 +58,13 @@ export const api = {
   moderate: (id: string, action: "approve" | "reject") =>
     fetch(`${BASE}/admin/events/${id}/${action}`, { method: "POST" }),
   removeEvent: (id: string) => fetch(`${BASE}/admin/events/${id}`, { method: "DELETE" }),
+  submitTip: (body: { message: string; email?: string | null }) =>
+    fetch(`${BASE}/tips`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  tips: () => get<{ id: string; message: string; email: string | null; created_at: string }[]>("/admin/tips"),
 };
 
 export function fmtDate(iso: string, allDay: boolean): string {

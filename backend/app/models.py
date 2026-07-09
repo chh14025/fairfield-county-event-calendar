@@ -74,3 +74,14 @@ class IngestRun(Base):
     ok: Mapped[bool] = mapped_column(Boolean, default=False)
     events_found: Mapped[int] = mapped_column(Integer, default=0)
     error: Mapped[str | None] = mapped_column(Text)
+
+
+class Tip(Base):
+    """User-submitted improvement suggestions ('tips')."""
+
+    __tablename__ = "tips"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    email: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)

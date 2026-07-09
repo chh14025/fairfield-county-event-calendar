@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 
 from fastapi import HTTPException, Request, Response
 
@@ -11,17 +12,23 @@ def admin_token() -> str:
     return hashlib.sha256(f"fce-admin:{settings.admin_password}".encode()).hexdigest()
 
 
-def login(response: Response, password: str) -> None:
-    if password != settings.admin_password:
+def login(request: Request, response: Response, password: str) -> None:
+    if not hmac.compare_digest(password, settings.admin_password):
         raise HTTPException(status_code=401, detail="Invalid password")
-    response.set_cookie(COOKIE_NAME, admin_token(), httponly=True, samesite="lax")
+    response.set_cookie(
+        COOKIE_NAME,
+        admin_token(),
+        httponly=True,
+        samesite="lax",
+        secure=request.url.scheme == "https",  # uvicorn --proxy-headers makes this correct behind Caddy/Cloudflare
+    )
 
 
 def require_admin(request: Request) -> None:
-    token = request.cookies.get(COOKIE_NAME)
+    token = request.cookies.get(COOKIE_NAME) or ""
     bearer = request.headers.get("Authorization", "")
-    if token == admin_token():
+    if hmac.compare_digest(token, admin_token()):
         return
-    if bearer == f"Bearer {settings.admin_password}":
+    if hmac.compare_digest(bearer, f"Bearer {settings.admin_password}"):
         return
     raise HTTPException(status_code=401, detail="Admin authentication required")

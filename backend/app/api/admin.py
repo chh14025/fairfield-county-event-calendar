@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 
 from ..auth import login, require_admin
@@ -10,8 +10,8 @@ router = APIRouter(prefix="/admin")
 
 
 @router.post("/login")
-def admin_login(body: LoginIn, response: Response):
-    login(response, body.password)
+def admin_login(body: LoginIn, request: Request, response: Response):
+    login(request, response, body.password)
     return {"ok": True}
 
 

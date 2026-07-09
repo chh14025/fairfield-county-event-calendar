@@ -77,3 +77,17 @@ class ModerationOut(BaseModel):
 
 class LoginIn(BaseModel):
     password: str
+
+
+class TipIn(BaseModel):
+    message: str = Field(min_length=5, max_length=2000)
+    email: EmailStr | None = None
+
+
+class TipOut(BaseModel):
+    id: str
+    message: str
+    email: str | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

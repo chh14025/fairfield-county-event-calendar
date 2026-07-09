@@ -8,6 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.api.submissions import _submissions_by_ip
+from app.api.tips import _tips_by_ip
 from app.db import Base, SessionLocal, engine
 from app.main import app
 
@@ -15,6 +16,7 @@ from app.main import app
 @pytest.fixture()
 def client():
     _submissions_by_ip.clear()
+    _tips_by_ip.clear()
     with TestClient(app) as c:
         yield c
     Base.metadata.drop_all(engine)

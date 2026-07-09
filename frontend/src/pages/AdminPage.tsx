@@ -6,6 +6,7 @@ export default function AdminPage() {
   const [pending, setPending] = useState<EventItem[]>([]);
   const [error, setError] = useState("");
   const [pubQuery, setPubQuery] = useState("");
+  const [tips, setTips] = useState<{ id: string; message: string; email: string | null; created_at: string }[]>([]);
   const [published, setPublished] = useState<EventItem[]>([]);
 
   async function load() {
@@ -34,6 +35,10 @@ export default function AdminPage() {
   useEffect(() => {
     if (authed) loadPublished(pubQuery);
   }, [authed, pubQuery]);
+
+  useEffect(() => {
+    if (authed) api.tips().then(setTips).catch(() => setTips([]));
+  }, [authed]);
 
   async function onLogin(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -115,6 +120,18 @@ export default function AdminPage() {
           </button>
         </div>
       ))}
+      <h2 style={{ marginTop: "2.5rem" }}>Improvement tips ({tips.length})</h2>
+      {tips.length === 0 && <p className="meta">No tips yet.</p>}
+      {tips.map((t) => (
+        <div className="card" key={t.id}>
+          <p style={{ margin: 0 }}>{t.message}</p>
+          <div className="meta">
+            {new Date(t.created_at).toLocaleString()}
+            {t.email ? ` · ${t.email}` : ""}
+          </div>
+        </div>
+      ))}
+
     </>
   );
 }

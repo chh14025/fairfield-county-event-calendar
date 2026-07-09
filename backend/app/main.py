@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from .api import admin, events, submissions, towns
+from .api import admin, events, submissions, tips, towns
 from .db import init_db
 
 
@@ -14,7 +14,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Fairfield County Events API", version="0.1.0", lifespan=lifespan)
 
-for router in (events.router, towns.router, submissions.router, admin.router):
+for router in (events.router, towns.router, submissions.router, tips.router, admin.router):
     app.include_router(router, prefix="/api/v1")
 
 
