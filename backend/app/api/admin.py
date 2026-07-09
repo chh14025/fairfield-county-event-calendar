@@ -1,7 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 
+from ingest.connectors.base import RawEvent
+
 from ..auth import login, require_admin
+from ..dedup import upsert_event
+from ..utils import utcnow
 from ..db import get_db
 from ..models import Event, IngestRun
 from ..schemas import EventOut, LoginIn, ModerationOut, PendingEventOut, RejectIn
@@ -75,6 +79,26 @@ def remove(event_id: str, db: Session = Depends(get_db)):
     event.status = "rejected"
     db.commit()
     return ModerationOut(id=event.id, status=event.status)
+
+
+@router.post("/ingest/{source_id}", dependencies=[Depends(require_admin)])
+def ingest_push(source_id: str, events: list[RawEvent], db: Session = Depends(get_db)):
+    """Receive pre-parsed events from a trusted remote runner (home connection).
+
+    Used for sources whose feeds block cloud IPs (CivicPlus: Norwalk, Greenwich .gov).
+    Same upsert/dedup path as server-side ingestion.
+    """
+    if len(events) > 2000:
+        raise HTTPException(status_code=413, detail="Too many events in one push")
+    run_row = IngestRun(source_id=source_id, ok=True, events_found=len(events))
+    db.add(run_row)
+    actions = {"created": 0, "updated": 0, "merged": 0}
+    for raw in events:
+        _, action = upsert_event(db, raw, source_id=source_id)
+        actions[action] += 1
+    run_row.finished_at = utcnow()
+    db.commit()
+    return {"received": len(events), **actions}
 
 
 @router.get("/ingest-runs", dependencies=[Depends(require_admin)])

@@ -56,19 +56,20 @@ sources:
     # CivicPlus "Special Events Calendar" (catID=32). Verified 2026-07-08:
     # Parks & Rec Summer Concert Series etc. Feed includes stale 2020-23 items
     # (harmless — past events expire). Wallace Center (senior programs) is catID=24.
-    # NOTE: CivicPlus 403s AWS/cloud IPs — works from residential connections only.
-    # Disabled in prod until a home-runner/push mechanism exists (see DEPLOY.md notes).
+    # CivicPlus 403s cloud IPs -> fetched by ingest/push_remote.py from a home connection.
     url: "https://www.greenwichct.gov/common/modules/iCalendar/iCalendar.aspx?catID=32&feed=calendar"
     verification: confirmed
-    enabled: false
+    enabled: true
+    residential_only: true
   - id: greenwich-wallace-center
     type: ical
     town: Greenwich
     # CivicPlus, THE WALLACE CENTER calendar (86 events — senior/community programs).
-    # NOTE: CivicPlus 403s AWS/cloud IPs — disabled in prod (same as special-events).
+    # CivicPlus 403s cloud IPs -> fetched by ingest/push_remote.py from a home connection.
     url: "https://www.greenwichct.gov/common/modules/iCalendar/iCalendar.aspx?catID=24&feed=calendar"
     verification: candidate
-    enabled: false
+    enabled: true
+    residential_only: true
   - id: heystamford
     type: rss  # NOT ical — Metro Publisher platform, RSS only (M3: needs rss connector;
                # note RSS pubDate is publish date, not event date -> parse from content)
@@ -118,22 +119,71 @@ sources:
     url: "https://VERIFY"
     verification: needs-discovery
     enabled: false
-  - id: lib-norwalk
+  - id: lib-norwalk-main
     type: ical
     town: Norwalk
-    # norwalkpl.org — platform unconfirmed; check events page in a browser.
-    url: "https://VERIFY"
-    verification: needs-discovery
-    enabled: false
-  - id: town-norwalk
-    type: ical
-    town: Norwalk
-    # CivicEngage; site blocks cloud IPs — verify from home. Try in browser:
-    # https://norwalkct.gov/RSSFeed.aspx?ModID=58&CID=All-calendar.xml (RSS) or open
-    # a calendar page and use the "iCalendar" subscribe link (iCalendar.aspx?catID=...).
-    url: "https://norwalkct.gov/common/modules/iCalendar/iCalendar.aspx?catID=VERIFY&feed=calendar"
+    # Norwalk Public Library, CivicPlus Main Calendar (CID=14). Blocks cloud IPs ->
+    # residential_only. (Also mirrors to norwalkpl.librarycalendar.com — LibraryCalendar,
+    # a future scraper target alongside Darien/Ferguson/Fairfield.)
+    url: "https://www.norwalkpl.org/common/modules/iCalendar/iCalendar.aspx?catID=14&feed=calendar"
     verification: candidate
-    enabled: false
+    enabled: true
+    residential_only: true
+    exclude_titles: ["library closed", "branch closed"]
+  - id: lib-norwalk-branch
+    type: ical
+    town: Norwalk
+    # Norwalk Public Library, Branch (SoNo) Calendar (CID=24).
+    url: "https://www.norwalkpl.org/common/modules/iCalendar/iCalendar.aspx?catID=24&feed=calendar"
+    verification: candidate
+    enabled: true
+    residential_only: true
+    exclude_titles: ["library closed", "branch closed"]
+  - id: town-norwalk-73
+    type: ical
+    town: Norwalk
+    # norwalkct.gov CivicPlus calendar CID=73 (names TBD — run push_remote once and
+    # review what lands; disable any that are pure board meetings).
+    url: "https://norwalkct.gov/common/modules/iCalendar/iCalendar.aspx?catID=73&feed=calendar"
+    verification: candidate
+    enabled: true
+    residential_only: true
+  - id: town-norwalk-51
+    type: ical
+    town: Norwalk
+    # norwalkct.gov CivicPlus calendar CID=51 (names TBD — run push_remote once and
+    # review what lands; disable any that are pure board meetings).
+    url: "https://norwalkct.gov/common/modules/iCalendar/iCalendar.aspx?catID=51&feed=calendar"
+    verification: candidate
+    enabled: true
+    residential_only: true
+  - id: town-norwalk-77
+    type: ical
+    town: Norwalk
+    # norwalkct.gov CivicPlus calendar CID=77 (names TBD — run push_remote once and
+    # review what lands; disable any that are pure board meetings).
+    url: "https://norwalkct.gov/common/modules/iCalendar/iCalendar.aspx?catID=77&feed=calendar"
+    verification: candidate
+    enabled: true
+    residential_only: true
+  - id: town-norwalk-29
+    type: ical
+    town: Norwalk
+    # norwalkct.gov CivicPlus calendar CID=29 (names TBD — run push_remote once and
+    # review what lands; disable any that are pure board meetings).
+    url: "https://norwalkct.gov/common/modules/iCalendar/iCalendar.aspx?catID=29&feed=calendar"
+    verification: candidate
+    enabled: true
+    residential_only: true
+  - id: town-norwalk-47
+    type: ical
+    town: Norwalk
+    # norwalkct.gov CivicPlus calendar CID=47 (names TBD — run push_remote once and
+    # review what lands; disable any that are pure board meetings).
+    url: "https://norwalkct.gov/common/modules/iCalendar/iCalendar.aspx?catID=47&feed=calendar"
+    verification: candidate
+    enabled: true
+    residential_only: true
   - id: lib-fairfield
     type: ical
     town: Fairfield

@@ -88,3 +88,26 @@ Nightly DB backup (optional): `crontab -e` and add
 - Norwalk's town site blocks datacenter IPs — that may include AWS, so the
   Norwalk town feed (when added) might only work via a different source. Test
   from the server with: `docker compose exec ingest python -m ingest.verify_sources`.
+
+## Home runner (sources that block cloud IPs)
+
+CivicPlus sites (Norwalk town + library, Greenwich .gov) reject requests from AWS.
+Sources marked `residential_only: true` in `backend/ingest/sources.yaml` are skipped
+by the server and instead fetched from your home PC and pushed to the API:
+
+```powershell
+# one-time: set env vars (user-level, persists)
+setx EVENTS_API_URL "https://ffctevents.us"
+setx EVENTS_ADMIN_PASSWORD "your-admin-password"
+
+# test run (new terminal so setx takes effect; from backend\)
+python -m ingest.push_remote
+# expect: "lib-norwalk-main: pushed N events -> {'received': N, 'created': ...}"
+
+# schedule daily at 7am (Windows Task Scheduler)
+schtasks /Create /SC DAILY /ST 07:00 /TN "ffct-events-push" /TR "cmd /c cd /d C:\Users\willi\projects\fairfield-events\backend && python -m ingest.push_remote"
+```
+
+The push endpoint (`POST /api/v1/admin/ingest/{source_id}`) uses the same
+upsert/dedup path as server ingestion, requires admin auth, and records an
+IngestRun so pushes show up in the admin ingest history alongside server runs.

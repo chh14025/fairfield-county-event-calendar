@@ -28,7 +28,12 @@ PER_SOURCE_DELAY_S = 2  # politeness between sources
 def load_sources(path: Path | None = None) -> list[dict]:
     path = path or Path(__file__).parent / "sources.yaml"
     data = yaml.safe_load(path.read_text())
-    return [s for s in data.get("sources", []) if s.get("enabled")]
+    # residential_only sources are fetched by ingest/push_remote.py from a home
+    # connection (CivicPlus blocks cloud IPs) and pushed via the admin API.
+    return [
+        s for s in data.get("sources", [])
+        if s.get("enabled") and not s.get("residential_only")
+    ]
 
 
 def filter_events(events: list, exclude_titles: list[str]) -> list:
