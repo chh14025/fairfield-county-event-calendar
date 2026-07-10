@@ -61,3 +61,22 @@ def test_towns_counts(client, db):
     assert towns["Stamford"] == 1
     assert towns["Westport"] == 1
     assert towns["Danbury"] == 0
+
+
+def test_per_event_ics_download(client, db):
+    seed(db)
+    event = db.query(Event).filter_by(title="Jazz Night").one()
+    resp = client.get(f"/api/v1/events/{event.id}.ics")
+    assert resp.status_code == 200
+    assert resp.headers["content-type"].startswith("text/calendar")
+    assert b"Jazz Night" in resp.content
+    assert b"DTSTART:20270115T180000Z" in resp.content  # explicit UTC, not floating
+
+    pending = db.query(Event).filter_by(title="Pending Thing").one()
+    assert client.get(f"/api/v1/events/{pending.id}.ics").status_code == 404
+
+
+def test_event_datetimes_serialized_as_utc(client, db):
+    seed(db)
+    item = client.get("/api/v1/events").json()["items"][0]
+    assert item["starts_at"].endswith("Z")

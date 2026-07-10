@@ -9,6 +9,7 @@ from ..config import settings
 from ..db import get_db
 from ..models import Event, EventSource
 from ..schemas import ModerationOut, SubmissionIn
+from ..utils import local_to_utc_naive
 
 router = APIRouter()
 log = logging.getLogger("submissions")
@@ -37,10 +38,10 @@ def create_submission(body: SubmissionIn, request: Request, db: Session = Depend
     if _rate_limited(ip):
         raise HTTPException(status_code=429, detail="Daily submission limit reached")
 
-    event = Event(
-        **body.model_dump(exclude={"hp_field"}),
-        status="pending",
-    )
+    data = body.model_dump(exclude={"hp_field"})
+    data["starts_at"] = local_to_utc_naive(data["starts_at"])
+    data["ends_at"] = local_to_utc_naive(data["ends_at"])
+    event = Event(**data, status="pending")
     db.add(event)
     db.flush()
     db.add(

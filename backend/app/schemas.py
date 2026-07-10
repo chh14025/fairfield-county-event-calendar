@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_serializer, field_validator
 
 from .models import TOWNS
 
@@ -20,6 +20,11 @@ class EventOut(BaseModel):
     price_text: str | None
 
     model_config = {"from_attributes": True}
+
+    @field_serializer("starts_at", "ends_at")
+    def _utc_iso(self, v: datetime | None) -> str | None:
+        # stored naive-UTC; emit with Z so browsers convert to local correctly
+        return None if v is None else v.isoformat() + "Z"
 
 
 class SourceOut(BaseModel):

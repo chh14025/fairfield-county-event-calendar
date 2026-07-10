@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import icalendar
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
@@ -11,6 +11,30 @@ from ..schemas import EventDetailOut, EventListOut
 from ..utils import utcnow
 
 router = APIRouter()
+
+
+def _utc(dt: datetime | None) -> datetime | None:
+    """Stored datetimes are naive UTC; ICS needs explicit tzinfo or times float."""
+    return dt.replace(tzinfo=timezone.utc) if dt else None
+
+
+def _vevent(e: Event) -> icalendar.Event:
+    ve = icalendar.Event()
+    ve.add("uid", f"{e.id}@fairfieldcountyevents")
+    ve.add("summary", e.title)
+    if e.all_day:
+        ve.add("dtstart", e.starts_at.date())
+    else:
+        ve.add("dtstart", _utc(e.starts_at))
+        if e.ends_at:
+            ve.add("dtend", _utc(e.ends_at))
+    if e.venue_name or e.address:
+        ve.add("location", ", ".join(filter(None, [e.venue_name, e.address, e.town])))
+    if e.description:
+        ve.add("description", e.description)
+    if e.url:
+        ve.add("url", e.url)
+    return ve
 
 
 def _filtered_query(
@@ -66,23 +90,27 @@ def events_ics(
     cal.add("prodid", "-//Fairfield County Events//EN")
     cal.add("version", "2.0")
     for e in events:
-        ve = icalendar.Event()
-        ve.add("uid", f"{e.id}@fairfieldcountyevents")
-        ve.add("summary", e.title)
-        ve.add("dtstart", e.starts_at)
-        if e.ends_at:
-            ve.add("dtend", e.ends_at)
-        if e.venue_name or e.address:
-            ve.add("location", ", ".join(filter(None, [e.venue_name, e.address, e.town])))
-        if e.description:
-            ve.add("description", e.description)
-        if e.url:
-            ve.add("url", e.url)
-        cal.add_component(ve)
+        cal.add_component(_vevent(e))
     return Response(
         content=cal.to_ical(),
         media_type="text/calendar",
         headers={"Content-Disposition": "attachment; filename=fairfield-events.ics"},
+    )
+
+
+@router.get("/events/{event_id}.ics")
+def event_ics(event_id: str, db: Session = Depends(get_db)):
+    event = db.get(Event, event_id)
+    if event is None or event.status not in ("approved", "expired"):
+        raise HTTPException(status_code=404, detail="Event not found")
+    cal = icalendar.Calendar()
+    cal.add("prodid", "-//Fairfield County Events//EN")
+    cal.add("version", "2.0")
+    cal.add_component(_vevent(event))
+    return Response(
+        content=cal.to_ical(),
+        media_type="text/calendar",
+        headers={"Content-Disposition": f"attachment; filename=event-{event_id}.ics"},
     )
 
 

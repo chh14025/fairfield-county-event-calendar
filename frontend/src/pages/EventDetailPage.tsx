@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { api, EventDetail, fmtDate } from "../api";
+import { api, calendarLinks, EventDetail, fmtDate } from "../api";
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -43,6 +43,23 @@ export default function EventDetailPage() {
           <a href={event.url} target="_blank" rel="noreferrer">Original event page →</a>
         </p>
       )}
+      {(() => {
+        const links = calendarLinks(event);
+        return (
+          <div className="filters" style={{ marginTop: "1rem" }}>
+            <span className="meta">Add to my calendar:</span>
+            <a href={links.google} target="_blank" rel="noreferrer">
+              <button className="secondary" type="button">Google</button>
+            </a>
+            <a href={links.outlook} target="_blank" rel="noreferrer">
+              <button className="secondary" type="button">Outlook</button>
+            </a>
+            <a href={links.ics}>
+              <button className="secondary" type="button">Apple / .ics</button>
+            </a>
+          </div>
+        );
+      })()}
       {event.sources.length > 0 && (
         <p className="meta">Seen on: {event.sources.map((s) => s.source_id).join(", ")}</p>
       )}

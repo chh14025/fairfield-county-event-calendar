@@ -1,6 +1,6 @@
 import { TouchEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, EventItem, TownCount } from "../api";
+import { api, eventDayKey, EventItem, TownCount } from "../api";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -65,7 +65,7 @@ export default function EventsPage() {
   const byDay = useMemo(() => {
     const m = new Map<string, EventItem[]>();
     for (const e of events) {
-      const k = dateKey(new Date(e.starts_at));
+      const k = eventDayKey(e);
       if (!m.has(k)) m.set(k, []);
       m.get(k)!.push(e);
     }

@@ -71,9 +71,53 @@ export const api = {
   tips: () => get<{ id: string; message: string; email: string | null; created_at: string }[]>("/admin/tips"),
 };
 
+function allDayDate(iso: string): Date {
+  // all-day events: use the calendar date as-is; never timezone-shift it
+  const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
 export function fmtDate(iso: string, allDay: boolean): string {
-  const d = new Date(iso);
   return allDay
-    ? d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })
-    : d.toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    ? allDayDate(iso).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })
+    : new Date(iso).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
+export function eventDayKey(e: { starts_at: string; all_day: boolean }): string {
+  if (e.all_day) return e.starts_at.slice(0, 10);
+  const d = new Date(e.starts_at);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+// --- "Add to my calendar" links ---
+function compact(iso: string): string {
+  return new Date(iso).toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
+}
+
+function allDayCompact(iso: string, plusDays = 0): string {
+  const d = allDayDate(iso);
+  d.setDate(d.getDate() + plusDays);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+}
+
+export function calendarLinks(e: EventItem): { google: string; outlook: string; ics: string } {
+  const endIso = e.ends_at ?? new Date(new Date(e.starts_at).getTime() + 3600_000).toISOString();
+  const dates = e.all_day
+    ? `${allDayCompact(e.starts_at)}/${allDayCompact(e.starts_at, 1)}`
+    : `${compact(e.starts_at)}/${compact(endIso)}`;
+  const location = [e.venue_name, e.address, e.town, "CT"].filter(Boolean).join(", ");
+  const details = (e.description ? e.description.slice(0, 500) + "\n\n" : "") + (e.url ?? "");
+  const google =
+    "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+    `&text=${encodeURIComponent(e.title)}&dates=${dates}` +
+    `&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
+  const outlook =
+    "https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent" +
+    `&subject=${encodeURIComponent(e.title)}` +
+    `&startdt=${encodeURIComponent(e.starts_at)}&enddt=${encodeURIComponent(endIso)}` +
+    (e.all_day ? "&allday=true" : "") +
+    `&body=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
+  return { google, outlook, ics: `/api/v1/events/${e.id}.ics` };
 }
