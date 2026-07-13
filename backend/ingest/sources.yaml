@@ -70,6 +70,19 @@ sources:
     verification: candidate
     enabled: true
     residential_only: true
+  - id: luma-cttechweek
+    type: ical
+    town: Other
+    # Luma calendar "CT Tech Week" (cal-ZrU2afDepDm7zkq from luma.com/CTTechWeek).
+    # Luma calendars expose public iCal: api.lu.ma/ics/get?entity=calendar&id=<cal-id>.
+    # API appears to block cloud IPs -> residential_only. NOTE: events span multiple
+    # CT towns; town=Other until we parse town from LOCATION (future enhancement).
+    # Add more Luma calendars the same way: view a calendar page's source, find
+    # "luma://calendar/cal-..." in the apple-itunes-app meta tag.
+    url: "https://api.lu.ma/ics/get?entity=calendar&id=cal-ZrU2afDepDm7zkq"
+    verification: candidate
+    enabled: true
+    residential_only: true
   - id: heystamford
     type: rss  # NOT ical — Metro Publisher platform, RSS only (M3: needs rss connector;
                # note RSS pubDate is publish date, not event date -> parse from content)
