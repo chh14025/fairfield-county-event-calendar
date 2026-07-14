@@ -19,7 +19,7 @@ import httpx
 import yaml
 
 from .connectors.ical_feed import ICalConnector
-from .runner import CONNECTOR_TYPES, filter_events
+from .runner import CONNECTOR_TYPES, prepare_events
 
 log = logging.getLogger("push_remote")
 
@@ -44,7 +44,7 @@ def main() -> int:
     for cfg in residential_sources():
         try:
             connector = CONNECTOR_TYPES[cfg["type"]](cfg)
-            events = filter_events(connector.fetch(), cfg.get("exclude_titles", []))
+            events = prepare_events(connector.fetch(), cfg)
             payload = [e.model_dump(mode="json") for e in events]
             resp = httpx.post(
                 f"{api}/api/v1/admin/ingest/{cfg['id']}",

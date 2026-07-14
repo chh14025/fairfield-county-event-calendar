@@ -4,12 +4,14 @@ Run: python -m ingest.runner  (from backend/)
 Per SPEC 3: a failing source never aborts the run; every run is recorded in IngestRun.
 """
 import logging
+import re
 import time
 from pathlib import Path
 
 import yaml
 
 from app.db import SessionLocal, init_db
+from app.models import TOWNS
 from app.dedup import upsert_event
 from app.models import IngestRun
 from app.utils import utcnow
@@ -49,6 +51,37 @@ def filter_events(events: list, exclude_titles: list[str]) -> list:
     return kept
 
 
+_TOWN_PATTERNS = [
+    (t, re.compile(rf"\b{re.escape(t)}\b", re.IGNORECASE)) for t in TOWNS if t != "Other"
+]
+
+
+def filter_county_towns(events: list) -> list:
+    """For multi-region calendars (e.g. global Luma calendars): keep only events
+    whose venue/address mentions a Fairfield County town, and tag them with it.
+    Events with no recognizable location (incl. online-only) are dropped."""
+    kept = []
+    for e in events:
+        loc = " ".join(filter(None, [e.venue_name, e.address]))
+        for town, pattern in _TOWN_PATTERNS:
+            if loc and pattern.search(loc):
+                e.town = town
+                kept.append(e)
+                break
+    dropped = len(events) - len(kept)
+    if dropped:
+        log.info("filtered %d out-of-county events", dropped)
+    return kept
+
+
+def prepare_events(events: list, cfg: dict) -> list:
+    """All post-fetch, pre-upsert filtering, shared by runner and push_remote."""
+    events = filter_events(events, cfg.get("exclude_titles", []))
+    if cfg.get("county_towns_only"):
+        events = filter_county_towns(events)
+    return events
+
+
 def run(sources: list[dict] | None = None) -> None:
     init_db()
     sources = sources if sources is not None else load_sources()
@@ -62,7 +95,7 @@ def run(sources: list[dict] | None = None) -> None:
         db.commit()
         try:
             connector = CONNECTOR_TYPES[cfg["type"]](cfg)
-            raw_events = filter_events(connector.fetch(), cfg.get("exclude_titles", []))
+            raw_events = prepare_events(connector.fetch(), cfg)
             for raw in raw_events:
                 upsert_event(db, raw, source_id=cfg["id"])
             db.commit()

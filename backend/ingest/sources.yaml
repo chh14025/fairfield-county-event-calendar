@@ -80,9 +80,20 @@ sources:
     # Add more Luma calendars the same way: view a calendar page's source, find
     # "luma://calendar/cal-..." in the apple-itunes-app meta tag.
     url: "https://api.lu.ma/ics/get?entity=calendar&id=cal-ZrU2afDepDm7zkq"
+    verification: confirmed  # feed verified from Will's browser 2026-07-09
+    enabled: true
+    residential_only: true
+    county_towns_only: true  # keep only Fairfield County events; tag town from venue
+  - id: luma-ai-collective
+    type: ical
+    town: Other
+    # The AI Collective's GLOBAL Luma calendar (hosts the Stamford AI Meetup).
+    # county_towns_only makes it safe: only events at Fairfield County venues survive.
+    url: "https://api.lu.ma/ics/get?entity=calendar&id=cal-E74MDlDKBaeAwXK"
     verification: candidate
     enabled: true
     residential_only: true
+    county_towns_only: true
   - id: heystamford
     type: rss  # NOT ical — Metro Publisher platform, RSS only (M3: needs rss connector;
                # note RSS pubDate is publish date, not event date -> parse from content)
